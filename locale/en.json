@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "title": "MCP servers",
+    "description": "Manage DSH MCP servers in one place: global (DSH_HOME/yiklek/mcp.json) and workspace-level (<workspace>/.dsh/yiklek/mcp.json), with import/export for the mainstream config shapes."
+  },
+  "title": "MCP servers",
+  "subtitle": "Connect external MCP servers; their tools reach the model as mcp__<name>__<tool>.",
+  "section": {
+    "global": "Global",
+    "project": "Project",
+    "globalNote": "Applies to every workspace"
+  },
+  "action": {
+    "add": "Add",
+    "import": "Import",
+    "export": "Export",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "deleteConfirm": "Confirm delete",
+    "enable": "Enable",
+    "disable": "Disable"
+  },
+  "field": {
+    "name": "Name",
+    "nameHint": "1–32 characters: letters, digits, underscore and hyphen only",
+    "transport": "Transport",
+    "transportStdio": "Local process (stdio)",
+    "transportHttp": "Remote service (Streamable HTTP)",
+    "command": "Command",
+    "args": "Arguments",
+    "env": "Environment",
+    "cwd": "Working directory",
+    "url": "URL",
+    "headers": "Headers",
+    "key": "Key",
+    "value": "Value",
+    "addRow": "Add row"
+  },
+  "status": {
+    "connected": "Connected",
+    "connecting": "Connecting",
+    "failed": "Failed",
+    "disabled": "Disabled",
+    "inactive": "Not in effect",
+    "unknown": "Unknown",
+    "tools": "{count} tools"
+  },
+  "empty": {
+    "global": "No global MCP servers yet",
+    "project": "This workspace has no MCP servers yet",
+    "hint": "Add one, or import an existing configuration"
+  },
+  "hint": {
+    "renamed": "This server is \"{serverName}\" in the profile because \"{name}\" was already taken",
+    "shadowedByGlobal": "Not in effect: a global server is also named \"{name}\", and the global definition wins. Delete or rename the global entry first."
+  },
+  "error": {
+    "nameDuplicate": "Duplicate name in the same file: {name}",
+    "conflict": "This configuration changed in another window. It has been reloaded; please review before saving again.",
+    "saveRejected": "Save rejected"
+  },
+  "notice": {
+    "saved": "Saved and applied",
+    "updated": "Updated and applied",
+    "deleted": "Deleted and applied",
+    "wsEnabled": "Workspace enabled (takes effect on the next start)",
+    "wsDisabled": "Workspace disabled; its MCP processes no longer start",
+    "imported": "Imported and applied"
+  },
+  "effective": {
+    "title": "What DSH actually loads",
+    "patchFile": "Config file",
+    "materialized": "Written",
+    "none": "(none)",
+    "adopted": "Picked up from the config file: {names}",
+    "skipped": "{name}: {reason}",
+    "reloadHint": "Some servers are not connected yet: if you just changed something, wait a moment or restart DSH."
+  },
+  "ws": {
+    "on": "enabled",
+    "off": "disabled",
+    "enable": "Enable this workspace",
+    "disable": "Disable this workspace",
+    "offHint": "This workspace is switched off: its MCP servers do not start and its sessions cannot see them.",
+    "add": "Add workspace",
+    "pick": "Pick a workspace",
+    "none": "No workspace registered yet",
+    "current": "current session"
+  },
+  "import": {
+    "title": "Import MCP configuration",
+    "hint": "Accepts Claude Desktop / Cursor / VS Code / DSH native",
+    "target": "Import into",
+    "paste": "Paste the configuration",
+    "placeholder": "{ \"mcpServers\": { \"github\": { \"command\": \"npx\", \"args\": [\"-y\", \"…\"] } } }",
+    "format": "Detected format",
+    "added": "Will be added",
+    "replaced": "Will be replaced",
+    "skippedLine": "{name}: {reason}",
+    "preview": "Preview",
+    "commit": "Import",
+    "invalidJson": "Not valid JSON",
+    "blockedLine": "⚠ will be rejected: {reason}"
+  },
+  "export": {
+    "title": "Export MCP configuration",
+    "hint": "Claude Desktop shape (an mcpServers object)",
+    "redact": "Redact (replace every env/header value with ${env:KEY}; clear this to export a full backup)",
+    "omitted": "This format cannot carry: {disabled} disabled server(s), {timeouts} timeout setting(s) — an export/import round trip loses both"
+  },
+  "drift": {
+    "adopted": "Picked up from the config file: {message}"
+  },
+  "external": {
+    "title": "Declared directly in the profile file",
+    "hint": "These entries live in cordis.patch.yml and are not managed here. To manage one, move it into mcp.json and remove it from the patch file."
+  },
+  "shortcut": {
+    "noSession": "No session is open"
+  },
+  "issue": {
+    "name-invalid": "A name must be 1–32 letters, digits, underscore or hyphen",
+    "name-duplicate": "Duplicate name in this file: {name}",
+    "transport-invalid": "Transport must be stdio or streamable-http",
+    "command-required": "A stdio server needs a command",
+    "command-relative": "The command looks like a relative path: {command} (prefer an absolute path or a global command)",
+    "url-required": "A streamable-http server needs a URL",
+    "url-invalid": "The URL must start with http:// or https://",
+    "secret-inline": "\"{key}\" looks like it contains a plaintext secret; prefer ${env:{key}}",
+    "timeout-odd": "That timeout looks unusual: {timeout} ms",
+    "servers-invalid": "`servers` must be an array",
+    "too-many-servers": "A workspace may declare at most {max} servers (this one has {count}). Every project server spawns a process on every boot."
+  }
+}

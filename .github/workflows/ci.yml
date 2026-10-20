@@ -1,0 +1,209 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# The ONE place each tool version appears — every job reads these.
+#
+# DSH is pinned rather than `@rc`/`@latest`: the compatibility guard
+# (tests/unit/compat.test.mjs) asserts this exact build still declares the seven
+# slots the panel registers and still exposes `tools.restrict`. A floating tag
+# would turn upstream drift into an unexplained red build instead of a diff
+# someone can read. Bump it here and the guard, the Playwright profile and the
+# pkg build all move together.
+#
+# pnpm is pinned because the lockfile is shared: CI and every dev machine must
+# resolve it with the same store layout.
+env:
+  DSH_VERSION: 0.2.1-rc.2
+  PNPM_VERSION: 12.4.2
+
+jobs:
+  test:
+    name: Typecheck & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build lib/
+        run: pnpm build
+
+      # tests/unit/compat.test.mjs asserts the installed DSH still declares every
+      # slot this plugin registers, with the same keyed/list kind, and still
+      # exposes `tools.restrict`. It SKIPS when no DSH is found — which is the
+      # default locally — so without this step the guard would be inert on CI and
+      # an upstream rename could break the panel silently.
+      # `npm --prefix` needs the directory to exist first.
+      - name: Install dsh for the compatibility guard
+        run: |
+          mkdir -p "$RUNNER_TEMP/dsh-compat"
+          npm install --no-save --prefix "$RUNNER_TEMP/dsh-compat" "@deepseek-ai/dsh@$DSH_VERSION"
+
+      - name: Run unit tests
+        run: pnpm test:unit
+        env:
+          DSH_INSTALL_DIR: ${{ runner.temp }}/dsh-compat/node_modules/@deepseek-ai/dsh
+
+  playwright:
+    name: Playwright functional test
+    runs-on: ubuntu-latest
+    # Links the plugin from this checkout into an auto-created profile, so it
+    # tests the code under test (works on PRs and main alike).
+    needs: [test]
+    timeout-minutes: 15
+    env:
+      DSH_HOME: /tmp/dsh-home-pw
+      DSH_PORT: "3100"
+      DSH_GLOBAL_FILE: /tmp/dsh-home-pw/yiklek/mcp.json
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps & build lib/
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      # CI runs Playwright's own Chromium; only local runs use Edge.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # DSH must be installed GLOBALLY, the way a user has it. `pnpm dlx` runs dsh
+      # from a throwaway directory, and that copy puts @deepseek-ai/dsh into the
+      # profile as a dependency — which drags in its native packages (node-pty,
+      # koffi, protobufjs) and their postinstall scripts, which pnpm then refuses
+      # to run with no way to answer. A global install keeps the profile to plugins
+      # only, so nothing needs building.
+      - name: Install dsh globally
+        run: |
+          PNPM_HOME="$HOME/.local/share/pnpm"
+          export PNPM_HOME
+          mkdir -p "$PNPM_HOME"
+          # pnpm appends /bin to PNPM_HOME, and refuses to install globally
+          # unless that bin directory is on PATH.
+          export PATH="$PNPM_HOME/bin:$PATH"
+          # PATH does not survive a step; GITHUB_PATH carries it to the rest.
+          echo "$PNPM_HOME/bin" >> "$GITHUB_PATH"
+          npm_config_dangerously_allow_all_builds=true pnpm add -g "@deepseek-ai/dsh@$DSH_VERSION"
+          dsh --version
+
+      - name: Create profile & link this plugin (dsh auto-creates the profile)
+        run: |
+          mkdir -p "$DSH_HOME/yiklek"
+          printf '{"version":1,"servers":[]}\n' > "$DSH_GLOBAL_FILE"
+          dsh plugin --profile web add "$GITHUB_WORKSPACE"
+          echo "profile ready with linked dsh-mcp-panel"
+
+      - name: Verify dsh can compose the profile
+        working-directory: ${{ env.DSH_HOME }}/profiles/web
+        run: dsh --profile web --dump-config > /tmp/dump.yml
+
+      - name: Start dsh web server
+        working-directory: ${{ env.DSH_HOME }}/profiles/web
+        run: |
+          dsh --profile web --host 127.0.0.1 --port "$DSH_PORT" --no-open > /tmp/dsh-e2e.log 2>&1 &
+          echo "PID=$!" >> "$GITHUB_ENV"
+          # The root gate answers 401 until the browser exchanges the boot token;
+          # readiness means the token URL has been printed.
+          for i in $(seq 1 90); do
+            if grep -qE 'https?://[^ ]+\?token=' /tmp/dsh-e2e.log; then
+              echo "Server ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          if ! grep -qE 'https?://[^ ]+\?token=' /tmp/dsh-e2e.log; then
+            echo "::error::dsh web server did not become ready"
+            cat /tmp/dsh-e2e.log
+            exit 1
+          fi
+
+      - name: Run the panel check
+        run: |
+          token="$(grep -oE 'https?://[^ ]+\?token=[A-Za-z0-9_-]+' /tmp/dsh-e2e.log | head -1)"
+          DSH_TOKEN_URL="$token" MCP_GLOBAL_FILE="$DSH_GLOBAL_FILE" \
+            node tests/playwright/panel.mjs
+
+      - name: Stop dsh web server
+        if: always()
+        run: |
+          kill "$PID" 2>/dev/null || true
+          pkill -f "dsh --profile web --host 127.0.0.1 --port $DSH_PORT" 2>/dev/null || true
+
+      - name: Show dsh boot log on failure
+        if: failure()
+        run: cat /tmp/dsh-e2e.log || true
+
+  pkg:
+    name: Build & push pkg branch
+    runs-on: ubuntu-latest
+    # Builds the distribution branch only after the FULL suite passes: the profile
+    # consumes `#pkg` directly, so a broken artifact is worse than no artifact.
+    needs: [test, playwright]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install deps & build lib/
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      # A git dependency is treated as SOURCE: the package manager installs
+      # devDependencies and runs `prepare`, which would need esbuild on every
+      # consumer's machine. scripts/pkg-manifest.mjs strips that build tooling from
+      # the manifest; `lib/` is committed below, so nothing needs compiling.
+      - name: Strip build tooling for the distribution branch
+        run: node scripts/pkg-manifest.mjs package.json package.json
+
+      - name: Commit lib/ + package.json and force-push pkg branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f lib/ package.json
+          git commit -m "pkg: rebuild lib/ for main ${{ github.sha }}"
+          git branch -f pkg HEAD
+          git push -f origin pkg

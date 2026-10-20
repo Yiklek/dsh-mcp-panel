@@ -1,0 +1,26 @@
+# dsh-mcp-panel bundle patch
+#
+# Mount anchor for the host half. What the host half actually does (src/host.ts):
+#
+#   • reads <DSH_HOME>/yiklek/mcp.json and <workspace>/.dsh/yiklek/mcp.json
+#   • keeps a managed region in the profile's cordis.patch.yml in sync with them.
+#     That region — not a dynamic mount — is what makes the tools visible:
+#     a dynamically mounted @deepseek-ai/dsh-mcp-client connects but its tools
+#     never reach an agent's tool table (see docs/p1-findings.md).
+#   • on `agent/created`, denies the tools of every OTHER workspace, so a session
+#     sees its own project servers and the global ones (docs/project-scope-plan.md)
+#   • serves /api/yiklek/mcp/* for the browser half
+#
+# The host half exports a volatile `Config`; the settings service reads it off this
+# entry and exposes it as the `mcp-panel` namespace. That is why the id below must
+# stay equal to the key the browser half writes to — the id IS the namespace.
+#
+# Install with the official CLI:
+#
+#   dsh plugin --profile <name> add dsh-mcp-panel
+#
+# (or add a dependency in the profile package.json and append the bundle to
+# dsh.profile.bundles).
+- insert:
+    - id: mcp-panel
+      name: 'dsh-mcp-panel'

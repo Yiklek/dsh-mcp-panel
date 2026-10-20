@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "title": "MCP 服务器",
+    "description": "集中管理 DSH 的 MCP 服务器：全局（DSH_HOME/yiklek/mcp.json）与工作区级（<workspace>/.dsh/yiklek/mcp.json），支持主流配置格式的导入导出。"
+  },
+  "title": "MCP 服务器",
+  "subtitle": "连接外部 MCP 服务器，其工具会以 mcp__<名称>__<工具> 的形式提供给模型。",
+  "section": {
+    "global": "全局",
+    "project": "项目",
+    "globalNote": "对所有工作区生效"
+  },
+  "action": {
+    "add": "添加",
+    "import": "导入",
+    "export": "导出",
+    "edit": "编辑",
+    "delete": "删除",
+    "save": "保存",
+    "cancel": "取消",
+    "close": "关闭",
+    "deleteConfirm": "确认删除",
+    "enable": "启用",
+    "disable": "停用"
+  },
+  "field": {
+    "name": "名称",
+    "nameHint": "1–32 个字符，仅限字母、数字、下划线与连字符",
+    "transport": "传输方式",
+    "transportStdio": "本地进程（stdio）",
+    "transportHttp": "远程服务（Streamable HTTP）",
+    "command": "命令",
+    "args": "参数",
+    "env": "环境变量",
+    "cwd": "工作目录",
+    "url": "地址",
+    "headers": "请求头",
+    "key": "键",
+    "value": "值",
+    "addRow": "添加一项"
+  },
+  "status": {
+    "connected": "已连接",
+    "connecting": "连接中",
+    "failed": "连接失败",
+    "disabled": "已停用",
+    "inactive": "未生效",
+    "unknown": "未知",
+    "tools": "{count} 个工具"
+  },
+  "empty": {
+    "global": "还没有全局 MCP 服务器",
+    "project": "当前工作区还没有 MCP 服务器",
+    "hint": "添加一个，或从已有配置导入"
+  },
+  "hint": {
+    "renamed": "该 server 在 profile 里名为「{serverName}」，因为「{name}」已被占用",
+    "shadowedByGlobal": "未生效：与全局的 server「{name}」同名，全局的定义优先。要启用此项，请先删除或重命名全局的那一个。"
+  },
+  "error": {
+    "nameDuplicate": "同一文件内名称重复：{name}",
+    "conflict": "这份配置在另一个窗口被改过，已重新载入。请确认后再保存。",
+    "saveRejected": "保存被拒绝"
+  },
+  "notice": {
+    "saved": "已保存并生效",
+    "updated": "已更新并生效",
+    "deleted": "已删除并生效",
+    "wsEnabled": "工作区已启用（下次启动生效）",
+    "wsDisabled": "工作区已停用，其 MCP 进程不再启动",
+    "imported": "导入完成并已生效"
+  },
+  "effective": {
+    "title": "DSH 实际加载的配置",
+    "patchFile": "配置文件",
+    "materialized": "已写入",
+    "none": "（无）",
+    "adopted": "已从配置文件纳入：{names}",
+    "skipped": "{name}：{reason}",
+    "reloadHint": "有服务器尚未连上：若刚修改过，请稍候，或重启 DSH 使其生效。"
+  },
+  "ws": {
+    "on": "已启用",
+    "off": "已停用",
+    "enable": "启用此工作区",
+    "disable": "停用此工作区",
+    "offHint": "此工作区已停用：它的 MCP 服务器不会启动，会话里也看不到它们。",
+    "add": "添加工作区",
+    "pick": "选择工作区",
+    "none": "没有已注册的工作区",
+    "current": "当前会话"
+  },
+  "import": {
+    "title": "导入 MCP 配置",
+    "hint": "支持 Claude Desktop / Cursor / VS Code / DSH 原生格式",
+    "target": "导入到",
+    "paste": "粘贴配置内容",
+    "placeholder": "{ \"mcpServers\": { \"github\": { \"command\": \"npx\", \"args\": [\"-y\", \"…\"] } } }",
+    "format": "识别到的格式",
+    "added": "将新增",
+    "replaced": "将覆盖",
+    "skippedLine": "{name}：{reason}",
+    "preview": "预览",
+    "commit": "确认导入",
+    "invalidJson": "不是合法的 JSON",
+    "blockedLine": "⚠ 会被拒绝：{reason}"
+  },
+  "export": {
+    "title": "导出 MCP 配置",
+    "hint": "Claude Desktop 形状（mcpServers 对象）",
+    "redact": "脱敏（把所有环境变量和请求头的值替换为 ${env:KEY}，取消勾选可导出原值做备份）",
+    "omitted": "此格式无法携带：{disabled} 个停用的 server、{timeouts} 个超时设置 —— 导出再导入会丢失这两项"
+  },
+  "drift": {
+    "adopted": "已从配置文件纳入：{message}"
+  },
+  "external": {
+    "title": "已在 profile 文件中直接声明",
+    "hint": "这些条目写在 cordis.patch.yml 里，不由本插件管理；如需管理，请把它们移到 mcp.json 后从 patch 文件删除"
+  },
+  "shortcut": {
+    "noSession": "当前没有可用的会话"
+  },
+  "issue": {
+    "name-invalid": "名称不合法：只能用 1–32 个字母、数字、下划线或连字符",
+    "name-duplicate": "本文件里有重名：{name}",
+    "transport-invalid": "传输方式只能是 stdio 或 streamable-http",
+    "command-required": "本地进程必须填写命令",
+    "command-relative": "命令看起来是相对路径：{command}（建议用绝对路径或全局命令）",
+    "url-required": "远程服务必须填写地址",
+    "url-invalid": "地址必须以 http:// 或 https:// 开头",
+    "secret-inline": "「{key}」里似乎有明文密钥，建议改用 ${env:{key}}",
+    "timeout-odd": "超时时间看起来不寻常：{timeout} ms",
+    "servers-invalid": "配置里的 servers 必须是数组",
+    "too-many-servers": "一个工作区最多 {max} 个 server（当前 {count} 个）。每个项目级 server 都会在每次启动时拉起进程。"
+  }
+}

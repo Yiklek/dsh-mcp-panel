@@ -1,0 +1,8 @@
+# pnpm asks for an explicit decision about dependency build scripts.
+#
+# esbuild runs one to place its platform binary. pnpm installs that binary as an
+# optional platform package anyway, so approving the script is about satisfying
+# pnpm's policy — refusing it makes `pnpm install --frozen-lockfile` fail with
+# ERR_PNPM_IGNORED_BUILDS, which is what CI runs.
+allowBuilds:
+  esbuild: true
