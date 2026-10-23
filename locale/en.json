@@ -66,7 +66,7 @@
     "saved": "Saved and applied",
     "updated": "Updated and applied",
     "deleted": "Deleted and applied",
-    "wsEnabled": "Workspace enabled (takes effect on the next start)",
+    "wsEnabled": "Workspace enabled — connecting now…",
     "wsDisabled": "Workspace disabled; its MCP processes no longer start",
     "imported": "Imported and applied"
   },
@@ -77,7 +77,7 @@
     "none": "(none)",
     "adopted": "Picked up from the config file: {names}",
     "skipped": "{name}: {reason}",
-    "reloadHint": "Some servers are not connected yet: if you just changed something, wait a moment or restart DSH."
+    "reloadHint": "Some servers are not connected yet: if you just changed something, wait a moment. If it stays down, toggle it off and on in the panel to retry — no restart needed."
   },
   "ws": {
     "on": "enabled",

@@ -66,7 +66,7 @@
     "saved": "已保存并生效",
     "updated": "已更新并生效",
     "deleted": "已删除并生效",
-    "wsEnabled": "工作区已启用（下次启动生效）",
+    "wsEnabled": "工作区已启用，正在连接…",
     "wsDisabled": "工作区已停用，其 MCP 进程不再启动",
     "imported": "导入完成并已生效"
   },
@@ -77,7 +77,7 @@
     "none": "（无）",
     "adopted": "已从配置文件纳入：{names}",
     "skipped": "{name}：{reason}",
-    "reloadHint": "有服务器尚未连上：若刚修改过，请稍候，或重启 DSH 使其生效。"
+    "reloadHint": "有服务器尚未连上：若刚修改过，请稍候。仍未连上就在面板里关掉再打开该 server，会重新发起连接。"
   },
   "ws": {
     "on": "已启用",
